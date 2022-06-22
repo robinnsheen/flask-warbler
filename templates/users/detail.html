@@ -51,9 +51,10 @@
 
           <li class="ms-auto">
             {% if g.user.id == user.id %}
-            <a href="/users/profile" class="btn btn-outline-secondary">
-              Edit Profile
-            </a>
+            <form action="/users/profile">
+              <button type="submit" class="btn btn-outline-secondary">
+                Edit Profile
+            </form>
             <form method="POST" action="/users/delete">
               <button class="btn btn-outline-danger ms-2">
                 Delete Profile
