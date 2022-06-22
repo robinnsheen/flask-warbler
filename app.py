@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm
 from models import db, connect_db, User, Message
 
 load_dotenv()
@@ -40,6 +40,13 @@ def add_user_to_g():
 
     else:
         g.user = None
+
+
+@app.before_request
+def add_csrf_to_g():
+    """ it adds a csrf form to g object"""
+
+    g.csrf_form = CSRFProtectForm()
 
 
 def do_login(user):
@@ -122,10 +129,15 @@ def logout():
 
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE
+    if form.validate_on_submit():
+        do_logout()
+        flash("successfully logged out!", 'success')
 
+    return redirect('/')
 
 ##############################################################################
 # General user routes:
+
 
 @app.get('/users')
 def list_users():
