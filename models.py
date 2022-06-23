@@ -166,6 +166,13 @@ class User(db.Model):
             user for user in self.following if user == other_user]
         return len(found_user_list) == 1
 
+    def is_favorited(self, fav_message):
+        """Is this message already favorites by the user"""
+
+        found_favorite_list = [
+            msg for msg in self.user_favorites if msg == fav_message]
+        return len(found_favorite_list) == 1
+
 
 class Message(db.Model):
     """An individual message ("warble")."""

@@ -345,10 +345,10 @@ def delete_message(message_id):
 
 
 @app.post('/users/favorite/<int:message_id>')
-def favorites_warble(message_id):
-    """Add a follow for the currently-logged-in user.
+def favorite_warble(message_id):
+    """Add a favorite message for the currently-logged-in user.
 
-    Redirect to following page for the current for the current user.
+    Redirect to favorites page for the  current user.
     """
 
     if not g.user:
@@ -359,8 +359,38 @@ def favorites_warble(message_id):
     g.user.user_favorites.append(favorited_message)
     db.session.commit()
 
-    return redirect(f"/users/{g.user.id}")
+    return redirect(f"/users/{g.user.id}/favorites")
 
+
+@app.post('/users/stop_favoriting/<int:message_id>')
+def unfavorite_warble(message_id):
+    """Remove a favorite message for the currently-logged-in user.
+
+    Redirect to favorites page for the  current user.
+    TODO: take them back to same place they came from for favorites routes, try hidden inputs
+    """
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    favorited_message = Message.query.get_or_404(message_id)
+    g.user.user_favorites.remove(favorited_message)
+    db.session.commit()
+
+    return redirect(f"/users/{g.user.id}/favorites")
+
+
+@app.get('/users/<int:user_id>/favorites')
+def show_favorites(user_id):
+    """Show list of favorites of this user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+    return render_template('users/favorites.html', user=user)
 
 ##############################################################################
 # Homepage and error pages
