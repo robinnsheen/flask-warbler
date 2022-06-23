@@ -20,7 +20,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ['DATABASE_URL'].replace("postgres://", "postgresql://"))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 toolbar = DebugToolbarExtension(app)
 
@@ -169,11 +169,18 @@ def show_user(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
+    # TODO: grab messages in order
 
-    return render_template('users/show.html', user=user)
+    messages = (Message
+                .query
+                .filter(Message.user_id == user_id)
+                .order_by(Message.timestamp.desc())
+                .all())
+
+    return render_template('users/show.html', user=user, messages=messages)
 
 
-@app.get('/users/<int:user_id>/following')
+@ app.get('/users/<int:user_id>/following')
 def show_following(user_id):
     """Show list of people this user is following."""
 
@@ -185,7 +192,7 @@ def show_following(user_id):
     return render_template('users/following.html', user=user)
 
 
-@app.get('/users/<int:user_id>/followers')
+@ app.get('/users/<int:user_id>/followers')
 def show_followers(user_id):
     """Show list of followers of this user."""
 
@@ -197,7 +204,7 @@ def show_followers(user_id):
     return render_template('users/followers.html', user=user)
 
 
-@app.post('/users/follow/<int:follow_id>')
+@ app.post('/users/follow/<int:follow_id>')
 def start_following(follow_id):
     """Add a follow for the currently-logged-in user.
 
@@ -215,7 +222,7 @@ def start_following(follow_id):
     return redirect(f"/users/{g.user.id}/following")
 
 
-@app.post('/users/stop-following/<int:follow_id>')
+@ app.post('/users/stop-following/<int:follow_id>')
 def stop_following(follow_id):
     """Have currently-logged-in-user stop following this user.
 
@@ -233,7 +240,7 @@ def stop_following(follow_id):
     return redirect(f"/users/{g.user.id}/following")
 
 
-@app.route('/users/profile', methods=["GET", "POST"])
+@ app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
 
@@ -255,7 +262,7 @@ def profile():
             user.image_url = form.data['image_url'] or user.image_url,
             user.bio = form.data['bio'] or user.bio
             user.header_image_url = form.data['header_image_url'] or user.header_image_url
-
+            user.location = form.data['location'] or user.location
             db.session.commit()
             flash("successfully changed", "success")
             return redirect(f"/users/{user.id}")
@@ -344,31 +351,39 @@ def delete_message(message_id):
 # Favorites route
 
 
-@app.post('/users/favorite/<int:message_id>')
+@ app.post('/users/favorite/<int:message_id>')
 def favorite_warble(message_id):
     """Add a favorite message for the currently-logged-in user.
 
     Redirect to favorites page for the  current user.
     """
 
+    route = request.form.get('same-page')
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     favorited_message = Message.query.get_or_404(message_id)
+
+    if g.user.id == favorited_message.user_id:
+
+        return redirect(f"{route}")
+
     g.user.user_favorites.append(favorited_message)
     db.session.commit()
 
-    return redirect(f"/users/{g.user.id}/favorites")
+    return redirect(f"{route}")
 
 
-@app.post('/users/stop_favoriting/<int:message_id>')
+@ app.post('/users/unfavoriting/<int:message_id>')
 def unfavorite_warble(message_id):
     """Remove a favorite message for the currently-logged-in user.
 
     Redirect to favorites page for the  current user.
-    TODO: take them back to same place they came from for favorites routes, try hidden inputs
     """
+
+    route = request.form.get('same-page')
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -378,10 +393,10 @@ def unfavorite_warble(message_id):
     g.user.user_favorites.remove(favorited_message)
     db.session.commit()
 
-    return redirect(f"/users/{g.user.id}/favorites")
+    return redirect(f"{route}")
 
 
-@app.get('/users/<int:user_id>/favorites')
+@ app.get('/users/<int:user_id>/favorites')
 def show_favorites(user_id):
     """Show list of favorites of this user."""
 
@@ -390,7 +405,17 @@ def show_favorites(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/favorites.html', user=user)
+
+    ids = {message.id for message in g.user.user_favorites}
+
+    messages = (Message
+                .query
+                .filter(Message.id.in_(ids))
+                .order_by(Message.timestamp.desc())
+                .all())
+    # TODO: QUERY MASSAGES (DESC) AND PASS INSTEAD OF USERS
+
+    return render_template('users/favorites.html', user=user, messages=messages)
 
 ##############################################################################
 # Homepage and error pages
@@ -406,9 +431,9 @@ def homepage():
 
     if g.user:
 
-        ids = [user.id for user in g.user.following]
+        ids = {user.id for user in g.user.following}
 
-        ids.append(g.user.id)
+        ids.add(g.user.id)
 
         messages = (Message
                     .query

@@ -38,3 +38,4 @@ class EditProfileForm(FlaskForm):
     image_url = StringField('(Optional) Image URL')
     header_image_url = StringField('(Optional) Header image')
     bio = TextAreaField('User Bio')
+    location = StringField('Location')

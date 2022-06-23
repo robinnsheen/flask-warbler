@@ -56,13 +56,17 @@
               <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
               <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
               <p>{{ msg.text }}</p>
-              {% if g.user.is_favorited(msg) %}
+              {% if g.user.is_favorited(msg) and msg.user_id != g.user.id %}
               <form method="POST"
-                    action="/users/stop_favoriting/{{ msg.id }}">
+                    action="/users/unfavoriting/{{ msg.id }}">
+
+                <input type="hidden"  name="same-page" value="/">
                 <button class="like-btn"><i class="fas fa-star"></i></button>
               </form>
-              {% else %}
+              {% elif msg.user_id != g.user.id %}
               <form method="POST" action="/users/favorite/{{ msg.id }}">
+
+                <input type="hidden"  name="same-page" value="/">
                 <button class="like-btn"><i class="far fa-star"></i></button>
               </form>
               {% endif %}

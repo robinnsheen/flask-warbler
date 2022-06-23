@@ -3,7 +3,7 @@
 <div class="col-sm-6">
   <ul class="list-group" id="messages">
 
-    {% for message in user.messages %}
+    {% for message in messages %}
 
     <li class="list-group-item">
 
@@ -21,13 +21,17 @@
               {{ message.timestamp.strftime('%d %B %Y') }}
             </span>
         <p>{{ message.text }}</p>
-        {% if g.user.is_favorited(message) %}
+        {% if g.user.is_favorited(message) and message.user_id != g.user.id %}
         <form method="POST"
-              action="/users/stop_favoriting/{{ message.id }}">
+              action="/users/unfavoriting/{{ message.id }}">
+
+              <input type="hidden"  name="same-page" value="/users/{{user.id}}">
           <button class="like-btn"><i class="fas fa-star"></i></button>
         </form>
-        {% else %}
+        {% elif message.user_id != g.user.id %}
         <form method="POST" action="/users/favorite/{{ message.id }}">
+
+          <input type="hidden"  name="same-page" value="/users/{{user.id}}">
           <button class="like-btn"><i class="far fa-star"></i></button>
         </form>
         {% endif %}

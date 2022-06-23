@@ -6,7 +6,7 @@
 
     <div class="col-lg-6 col-md-8 col-sm-12">
       <ul class="list-group" id="messages">
-        {% for msg in user.user_favorites %}
+        {% for msg in messages %}
           <li class="list-group-item">
             <a href="/messages/{{ msg.id }}" class="message-link">
             <a href="/users/{{ msg.user.id }}">
@@ -16,16 +16,12 @@
               <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
               <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
               <p>{{ msg.text }}</p>
-              {% if g.user.is_favorited(msg) %}
               <form method="POST"
-                    action="/users/stop_favoriting/{{ msg.id }}">
+                    action="/users/unfavoriting/{{ msg.id }}">
+
+                    <input type="hidden"  name="same-page" value="/users/{{user.id}}/favorites">
                 <button class="like-btn"><i class="fas fa-star"></i></button>
               </form>
-              {% else %}
-              <form method="POST" action="/users/favorite/{{ msg.id }}">
-                <button class="like-btn"><i class="far fa-star"></i></button>
-              </form>
-              {% endif %}
             </div>
           </li>
         {% endfor %}
