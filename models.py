@@ -12,6 +12,24 @@ DEFAULT_IMAGE_URL = "/static/images/default-pic.png"
 DEFAULT_HEADER_IMAGE_URL = "/static/images/warbler-hero.jpg"
 
 
+class Favorite(db.Model):
+    """Connection of a user <-> message."""
+
+    __tablename__ = 'favorites'
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete="cascade"),
+        primary_key=True,
+    )
+
+    message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('messages.id', ondelete="cascade"),
+        primary_key=True,
+    )
+
+
 class Follows(db.Model):
     """Connection of a follower <-> followed_user."""
 
@@ -83,6 +101,12 @@ class User(db.Model):
         primaryjoin=(Follows.user_being_followed_id == id),
         secondaryjoin=(Follows.user_following_id == id),
         backref="following",
+    )
+
+    user_favorites = db.relationship(
+        "Message",
+        secondary="favorites",
+        backref="users",
     )
 
     def __repr__(self):

@@ -247,15 +247,14 @@ def profile():
 
     if form.validate_on_submit():
 
-        user.username = form.data.get('username', user.username),
-        user.email = form.data.get('email', user.email),
-        user.image_url = form.data.get(
-            'image_url', user.image_url) or User.image_url.default.arg,
-        user.bio = form.data.get('bio', user.bio)
-        user.header_image_url = form.data.get(
-            'header_image_url', user.header_image_url)
-
         if User.authenticate(form.username.data, form.password.data):
+
+            user.username = form.data['username'] or user.username,
+            user.email = form.data['email'] or user.email,
+            # or User.image_url.default.arg,
+            user.image_url = form.data['image_url'] or user.image_url,
+            user.bio = form.data['bio'] or user.bio
+            user.header_image_url = form.data['header_image_url'] or user.header_image_url
 
             db.session.commit()
             flash("successfully changed", "success")
@@ -266,7 +265,7 @@ def profile():
     return render_template('users/edit.html', form=form)
 
 
-@app.post('/users/delete')
+@ app.post('/users/delete')
 def delete_user():
     """Delete user.
 
@@ -288,7 +287,7 @@ def delete_user():
 ##############################################################################
 # Messages routes:
 
-@app.route('/messages/new', methods=["GET", "POST"])
+@ app.route('/messages/new', methods=["GET", "POST"])
 def add_message():
     """Add a message:
 
@@ -308,10 +307,10 @@ def add_message():
 
         return redirect(f"/users/{g.user.id}")
 
-    return render_template('messages/new.html', form=form)
+    return render_template('messages/create.html', form=form)
 
 
-@app.get('/messages/<int:message_id>')
+@ app.get('/messages/<int:message_id>')
 def show_message(message_id):
     """Show a message."""
 
@@ -323,7 +322,7 @@ def show_message(message_id):
     return render_template('messages/show.html', message=msg)
 
 
-@app.post('/messages/<int:message_id>/delete')
+@ app.post('/messages/<int:message_id>/delete')
 def delete_message(message_id):
     """Delete a message.
 
@@ -341,12 +340,33 @@ def delete_message(message_id):
 
     return redirect(f"/users/{g.user.id}")
 
+##############################################################################
+# Favorites route
+
+
+@app.post('/users/favorite/<int:message_id>')
+def favorites_warble(message_id):
+    """Add a follow for the currently-logged-in user.
+
+    Redirect to following page for the current for the current user.
+    """
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    favorited_message = Message.query.get_or_404(message_id)
+    g.user.user_favorites.append(favorited_message)
+    db.session.commit()
+
+    return redirect(f"/users/{g.user.id}")
+
 
 ##############################################################################
 # Homepage and error pages
 
 
-@app.get('/')
+@ app.get('/')
 def homepage():
     """Show homepage:
 
@@ -356,11 +376,9 @@ def homepage():
 
     if g.user:
 
-        following = g.user.following
-        ids = [g.user.id]
+        ids = [user.id for user in g.user.following]
 
-        for user in following:
-            ids.append(user.id)
+        ids.append(g.user.id)
 
         messages = (Message
                     .query
@@ -382,7 +400,7 @@ def homepage():
 #
 # https://stackoverflow.com/questions/34066804/disabling-caching-in-flask
 
-@app.after_request
+@ app.after_request
 def add_header(response):
     """Add non-caching headers on every request."""
 
