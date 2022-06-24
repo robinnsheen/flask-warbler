@@ -20,7 +20,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ['DATABASE_URL'].replace("postgres://", "postgresql://"))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 toolbar = DebugToolbarExtension(app)
 
@@ -86,6 +86,7 @@ def signup():
                 email=form.email.data,
                 image_url=form.image_url.data or User.image_url.default.arg,
             )
+            db.session.add(user)
             db.session.commit()
 
         except IntegrityError:
@@ -169,10 +170,8 @@ def show_user(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    # TODO: grab messages in order
 
-
-
+    # grabs messages in order
     messages = (Message
                 .query
                 .filter(Message.user_id == user_id)
@@ -344,8 +343,11 @@ def delete_message(message_id):
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
-    db.session.delete(msg)
-    db.session.commit()
+
+    if g.user.id == msg.user_id:
+
+        db.session.delete(msg)
+        db.session.commit()
 
     return redirect(f"/users/{g.user.id}")
 
