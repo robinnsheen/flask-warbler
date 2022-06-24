@@ -26,6 +26,8 @@ class MessageBaseViewTestCase(TestCase):
         User.query.delete()
 
         u1 = User.signup("u1", "u1@email.com", "password", None)
+        u2 = User.signup("u2", "u2@email.com", "password", None)
+
         db.session.flush()
 
         m1 = Message(text="m1-text", user_id=u1.id)
@@ -33,6 +35,8 @@ class MessageBaseViewTestCase(TestCase):
         db.session.commit()
 
         self.u1_id = u1.id
+        self.u2_id = u2.id
+
         self.m1_id = m1.id
 
         self.client = app.test_client()
@@ -63,7 +67,7 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             resp = c.post(f"/messages/{self.m1_id}/delete")
             self.assertEqual(resp.status_code, 302)
             self.assertEqual(Message.query.filter_by(id=self.m1_id).one_or_none(), None)
-
+            #TODO: test you got to the right place, msg no longer appear on the page.
 
     def test_show_message(self):
         """ test if message text is shows in a warble text-body """
@@ -103,3 +107,15 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 404)
+
+    #TODO: ask if we need to test add new message form a different user .
+    def test_delete_message_diff_user(self):
+        """ test if deleted message doesn't exits in the database """
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u2_id
+
+            resp = c.post(f"/messages/{self.m1_id}/delete")
+            self.assertEqual(resp.status_code, 302)
+            self.assertTrue(Message.query.filter_by(id=self.m1_id).one_or_none())
+            #NOT QUERYING  grab element where ever page we land on

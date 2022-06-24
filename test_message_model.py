@@ -14,7 +14,7 @@ db.create_all()
 
 class MessageModelTestCase(TestCase):
     def setUp(self):
-
+        # deleting a user will delete all messages (b/c of cascade)
         User.query.delete()
 
         u1 = User.signup("u1", "u1@email.com", "password", None)

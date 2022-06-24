@@ -8,7 +8,7 @@
 from app import app
 import os
 from unittest import TestCase
-
+from sqlalchemy import exc
 from models import db, User, Message, Follows
 
 # BEFORE we import our app, let's set an environmental variable
@@ -112,16 +112,16 @@ class UserModelTestCase(TestCase):
     def test_fail_signup(self):
         """ Test if user is not signed up if validations fail """
 
-        error = False
+        # error = False
 
-        u3 = User.signup("u1", "BADEMAIL", "p", None)
+        with self.assertRaises(exc.IntegrityError):
+            User.signup("u1", "BADEMAIL", "p", None)
+            db.session.commit()
 
-        try:
-            User.query.get(u3.id)
-        except Exception:
-            error = True
+        # except exc.IntegrityError:
+        #     error = True
 
-        self.assertTrue(error)
+        # self.assertTrue(error)
 
 
     def test_is_authenticated(self):
@@ -141,12 +141,12 @@ class UserModelTestCase(TestCase):
         auth = User.authenticate('y1', 'password')
 
         self.assertNotEqual(u1, auth)
-
+#TODO: change authentic to authenticated
     def test_password_not_authentic(self):
         """ Test if user's password is not authentic """
 
         u1 = User.query.get(self.u1_id)
 
         auth = User.authenticate('u1', 'pas$sword')
-
+#TODO: asserfalse v
         self.assertNotEqual(u1, auth)

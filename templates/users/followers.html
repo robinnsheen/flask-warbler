@@ -2,6 +2,7 @@
 
 {% block user_details %}
 <div class="col-sm-9">
+  <!-- @followers (for Testing)-->
   <div class="row">
 
     {% for follower in user.followers %}
@@ -14,6 +15,7 @@
                  alt=""
                  class="card-hero">
           </div>
+
           <div class="card-contents">
             <a href="/users/{{ follower.id }}" class="card-link">
               <img src="{{ follower.image_url }}"
