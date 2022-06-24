@@ -124,3 +124,29 @@ class UserModelTestCase(TestCase):
         self.assertTrue(error)
 
 
+    def test_is_authenticated(self):
+        """ Test if user's username and password is authentic """
+
+        u1 = User.query.get(self.u1_id)
+
+        auth = User.authenticate(u1.username, 'password')
+
+        self.assertEqual(u1, auth)
+
+    def test_username_not_authentic(self):
+        """ Test if user's username is not authentic """
+
+        u1 = User.query.get(self.u1_id)
+
+        auth = User.authenticate('y1', 'password')
+
+        self.assertNotEqual(u1, auth)
+
+    def test_password_not_authentic(self):
+        """ Test if user's password is not authentic """
+
+        u1 = User.query.get(self.u1_id)
+
+        auth = User.authenticate('u1', 'pas$sword')
+
+        self.assertNotEqual(u1, auth)

@@ -24,13 +24,13 @@
         {% if g.user.is_favorited(message) and message.user_id != g.user.id %}
         <form method="POST"
               action="/users/unfavoriting/{{ message.id }}">
-
+              {{g.csrf_form.hidden_tag()}}
               <input type="hidden"  name="same-page" value="/users/{{user.id}}">
           <button class="like-btn"><i class="fas fa-star"></i></button>
         </form>
         {% elif message.user_id != g.user.id %}
         <form method="POST" action="/users/favorite/{{ message.id }}">
-
+          {{g.csrf_form.hidden_tag()}}
           <input type="hidden"  name="same-page" value="/users/{{user.id}}">
           <button class="like-btn"><i class="far fa-star"></i></button>
         </form>

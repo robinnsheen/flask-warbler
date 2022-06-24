@@ -106,7 +106,7 @@ class User(db.Model):
     user_favorites = db.relationship(
         "Message",
         secondary="favorites",
-        backref="users",
+        backref="users_favorited",
     )
 
     def __repr__(self):
