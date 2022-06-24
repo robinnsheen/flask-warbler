@@ -171,6 +171,8 @@ def show_user(user_id):
     user = User.query.get_or_404(user_id)
     # TODO: grab messages in order
 
+    breakpoint()
+
     messages = (Message
                 .query
                 .filter(Message.user_id == user_id)
