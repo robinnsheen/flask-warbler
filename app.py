@@ -410,7 +410,7 @@ def show_favorites(user_id):
 
     user = User.query.get_or_404(user_id)
 
-    ids = {message.id for message in g.user.user_favorites}
+    ids = {message.id for message in user.user_favorites}
 
     messages = (Message
                 .query
